@@ -34,6 +34,7 @@ pub:
 	value string
 	href string
 	disabled bool
+	checked bool
 }
 
 struct WireSnapshot {
@@ -110,6 +111,7 @@ pub fn encode_handoff(handoff BrowserHandoff) string {
 			value: control.value
 			href: control.href
 			disabled: control.disabled
+			checked: control.checked
 		}
 	}
 	wire := WireHandoff{
@@ -165,6 +167,7 @@ pub fn decode_handoff(payload string) !BrowserHandoff {
 			value: item.value
 			href: item.href
 			disabled: item.disabled
+			checked: item.checked
 		}
 	}
 	mut actions := []BrowserAction{cap: wire.pending.len}
