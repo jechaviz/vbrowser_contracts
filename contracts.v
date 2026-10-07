@@ -105,8 +105,18 @@ pub fn (action BrowserAction) valid() bool {
 		&& action.contract.valid()
 }
 
+pub fn version_compatible(version string) bool {
+	current_major := contract_version.all_before('.')
+	candidate := version.trim_space()
+	if candidate == '' {
+		return false
+	}
+	candidate_major := candidate.all_before('.')
+	return candidate_major == current_major
+}
+
 pub fn (handoff BrowserHandoff) compatible() bool {
-	return handoff.version == contract_version && handoff.source.trim_space() != ''
+	return version_compatible(handoff.version) && handoff.source.trim_space() != ''
 		&& handoff.destination.trim_space() != ''
 }
 
