@@ -23,3 +23,23 @@ fn test_handoff_version_gate() {
 	}
 	assert handoff.compatible()
 }
+
+
+fn test_handoff_json_round_trip() {
+	handoff := BrowserHandoff{
+		source: 'extractor'
+		destination: 'browser_runtime'
+		intent: BrowserIntent{
+			id: 'i1'
+			raw: 'example.com'
+			kind: .navigate
+			value: 'https://example.com'
+		}
+	}
+	payload := encode_handoff(handoff)
+	decoded := decode_handoff(payload) or { panic(err.msg()) }
+	assert decoded.compatible()
+	assert decoded.source == 'extractor'
+	assert decoded.intent.kind == .navigate
+	assert decoded.intent.value == 'https://example.com'
+}
