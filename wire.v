@@ -119,8 +119,8 @@ pub fn encode_handoff(handoff BrowserHandoff) string {
 
 pub fn decode_handoff(payload string) !BrowserHandoff {
 	wire := json.decode(WireHandoff, payload)!
-	if wire.version != contract_version {
-		return error('unsupported browser handoff version: ${wire.version}')
+	if !version_compatible(wire.version) {
+		return error('unsupported browser handoff major version: ${wire.version}')
 	}
 	intent := BrowserIntent{
 		id: wire.intent.id
@@ -187,7 +187,7 @@ fn parse_intent_kind(value string) !IntentKind {
 		'search' { .search }
 		'command' { .command }
 		'goal' { .goal }
-		else { error('unknown browser intent kind: ${value}') }
+		else { .goal }
 	}
 }
 
@@ -196,7 +196,7 @@ fn parse_engine_hint(value string) !EngineHint {
 		'', 'auto' { .auto }
 		'native' { .native }
 		'webview' { .webview }
-		else { error('unknown browser engine hint: ${value}') }
+		else { .auto }
 	}
 }
 
@@ -205,7 +205,7 @@ fn parse_actor(value string) !Actor {
 		'', 'agent' { .agent }
 		'user' { .user }
 		'system' { .system }
-		else { error('unknown browser actor: ${value}') }
+		else { .agent }
 	}
 }
 
@@ -217,6 +217,6 @@ fn parse_action_phase(value string) !ActionPhase {
 		'succeeded' { .succeeded }
 		'failed' { .failed }
 		'cancelled' { .cancelled }
-		else { error('unknown browser action phase: ${value}') }
+		else { .proposed }
 	}
 }
