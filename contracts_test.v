@@ -61,7 +61,7 @@ fn test_wire_tolerates_future_minor_enum_values() {
 
 
 fn test_browser_operation_vocabulary_is_canonical_and_compatible() {
-	assert contract_version == '1.1.0'
+	assert contract_version == '1.2.0'
 	assert normalize_browser_operation('tap') == 'click'
 	assert normalize_browser_operation('click by text') == 'click_text'
 	assert normalize_browser_operation('select-option') == 'select_value'
@@ -85,4 +85,33 @@ fn test_browser_action_operation_defaults_by_action_kind() {
 		BrowserTarget{}, 0)
 	assert browser_action_operation(act) == 'click'
 	assert browser_action_operation(submit) == 'submit'
+}
+
+
+fn test_handoff_roundtrip_preserves_action_surface_controls() {
+	handoff := BrowserHandoff{
+		source: 'hebrowser'
+		destination: 'waibav'
+		snapshot: PageSnapshot{
+			revision: 12
+			url: 'https://example.com'
+			controls: [
+				PageControl{
+					id: 'el-1'
+					role: 'button'
+					label: 'Save'
+					name: 'save'
+					value: ''
+					href: ''
+					disabled: false
+				},
+			]
+		}
+	}
+	payload := encode_handoff(handoff)
+	decoded := decode_handoff(payload) or { panic(err.msg()) }
+	assert decoded.snapshot.controls.len == 1
+	assert decoded.snapshot.controls[0].id == 'el-1'
+	assert decoded.snapshot.controls[0].role == 'button'
+	assert decoded.snapshot.controls[0].label == 'Save'
 }
