@@ -2,7 +2,7 @@ module vbrowser_contracts
 
 import vaction_contracts
 
-pub const contract_version = '1.1.0'
+pub const contract_version = '1.2.0'
 
 pub enum IntentKind {
 	navigate
@@ -50,6 +50,17 @@ pub:
 	dry_run     bool
 }
 
+pub struct PageControl {
+pub:
+	id       string
+	role     string
+	label    string
+	name     string
+	value    string
+	href     string
+	disabled bool
+}
+
 pub struct PageSnapshot {
 pub:
 	session_id       string
@@ -60,6 +71,7 @@ pub:
 	visible_text     string
 	dom_fingerprint  string
 	captured_at_unix i64
+	controls         []PageControl
 }
 
 pub struct BrowserAction {
