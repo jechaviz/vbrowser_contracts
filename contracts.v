@@ -59,6 +59,7 @@ pub:
 	value    string
 	href     string
 	disabled bool
+	checked  bool
 }
 
 pub struct PageSnapshot {
