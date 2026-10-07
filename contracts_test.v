@@ -58,3 +58,31 @@ fn test_wire_tolerates_future_minor_enum_values() {
 	assert decoded.intent.kind == .goal
 	assert decoded.intent.engine_hint == .auto
 }
+
+
+fn test_browser_operation_vocabulary_is_canonical_and_compatible() {
+	assert contract_version == '1.1.0'
+	assert normalize_browser_operation('tap') == 'click'
+	assert normalize_browser_operation('click by text') == 'click_text'
+	assert normalize_browser_operation('select-option') == 'select_value'
+	assert normalize_browser_operation('return') == 'press_enter'
+	assert browser_operation_supported('fill')
+	assert !browser_operation_supported('drag_and_drop')
+	assert browser_operation_is_textual('clicktext')
+	assert browser_operation_is_mutating('choose')
+}
+
+fn test_browser_action_operation_defaults_by_action_kind() {
+	intent := BrowserIntent{
+		id: 'op'
+		raw: 'act'
+		kind: .command
+		value: 'act'
+	}
+	act := action_for_intent('a', intent, 'Browser.Act', map[string]string{},
+		BrowserTarget{}, 0)
+	submit := action_for_intent('s', intent, 'Browser.Submit', map[string]string{},
+		BrowserTarget{}, 0)
+	assert browser_action_operation(act) == 'click'
+	assert browser_action_operation(submit) == 'submit'
+}
