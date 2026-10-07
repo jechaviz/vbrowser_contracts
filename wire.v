@@ -25,6 +25,17 @@ pub:
 	dry_run bool
 }
 
+struct WireControl {
+pub:
+	id string
+	role string
+	label string
+	name string
+	value string
+	href string
+	disabled bool
+}
+
 struct WireSnapshot {
 pub:
 	session_id string
@@ -35,6 +46,7 @@ pub:
 	visible_text string
 	dom_fingerprint string
 	captured_at_unix i64
+	controls []WireControl
 }
 
 struct WireAction {
@@ -88,6 +100,18 @@ pub fn encode_handoff(handoff BrowserHandoff) string {
 			after_revision: receipt.after_revision
 		}
 	}
+	mut controls := []WireControl{cap: handoff.snapshot.controls.len}
+	for control in handoff.snapshot.controls {
+		controls << WireControl{
+			id: control.id
+			role: control.role
+			label: control.label
+			name: control.name
+			value: control.value
+			href: control.href
+			disabled: control.disabled
+		}
+	}
 	wire := WireHandoff{
 		version: handoff.version
 		source: handoff.source
@@ -110,6 +134,7 @@ pub fn encode_handoff(handoff BrowserHandoff) string {
 			visible_text: handoff.snapshot.visible_text
 			dom_fingerprint: handoff.snapshot.dom_fingerprint
 			captured_at_unix: handoff.snapshot.captured_at_unix
+			controls: controls
 		}
 		pending: actions
 		evidence: evidence
@@ -129,6 +154,18 @@ pub fn decode_handoff(payload string) !BrowserHandoff {
 		value: wire.intent.value
 		engine_hint: parse_engine_hint(wire.intent.engine_hint)!
 		dry_run: wire.intent.dry_run
+	}
+	mut controls := []PageControl{cap: wire.snapshot.controls.len}
+	for item in wire.snapshot.controls {
+		controls << PageControl{
+			id: item.id
+			role: item.role
+			label: item.label
+			name: item.name
+			value: item.value
+			href: item.href
+			disabled: item.disabled
+		}
 	}
 	mut actions := []BrowserAction{cap: wire.pending.len}
 	for item in wire.pending {
@@ -175,6 +212,7 @@ pub fn decode_handoff(payload string) !BrowserHandoff {
 			visible_text: wire.snapshot.visible_text
 			dom_fingerprint: wire.snapshot.dom_fingerprint
 			captured_at_unix: wire.snapshot.captured_at_unix
+			controls: controls
 		}
 		pending: actions
 		evidence: evidence
