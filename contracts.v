@@ -177,6 +177,15 @@ pub fn browser_operation_is_textual(value string) bool {
 	return normalize_browser_operation(value) in ['click_text', 'fill_text']
 }
 
+pub fn engine_hint_from_string(value string) EngineHint {
+	clean := value.trim_space().to_lower().replace('-', '_')
+	return match clean {
+		'native', 'v', 'v_native' { .native }
+		'webview', 'webview2', 'compatibility', 'chromium' { .webview }
+		else { .auto }
+	}
+}
+
 pub fn browser_operation_is_mutating(value string) bool {
 	return normalize_browser_operation(value) in [
 		'fill',
