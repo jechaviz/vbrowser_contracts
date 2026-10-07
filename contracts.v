@@ -57,6 +57,7 @@ pub:
 	label    string
 	name     string
 	value    string
+	selector string
 	href     string
 	disabled bool
 	checked  bool
