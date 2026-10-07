@@ -2,7 +2,7 @@ module vbrowser_contracts
 
 import vaction_contracts
 
-pub const contract_version = '1.0.0'
+pub const contract_version = '1.1.0'
 
 pub enum IntentKind {
 	navigate
@@ -131,4 +131,61 @@ pub fn action_for_intent(id string, intent BrowserIntent, name string, args map[
 		contract:                   vaction_contracts.contract_for_action(name)
 		expected_snapshot_revision: revision
 	}
+}
+
+
+pub const browser_operations = [
+	'click',
+	'click_text',
+	'fill',
+	'fill_text',
+	'set_value',
+	'submit',
+	'check',
+	'uncheck',
+	'toggle',
+	'select_value',
+	'focus',
+	'press_enter',
+	'scroll_into_view',
+]
+
+pub fn normalize_browser_operation(value string) string {
+	clean := value.trim_space().to_lower().replace('-', '_').replace(' ', '_')
+	return match clean {
+		'', 'activate', 'press', 'tap' { 'click' }
+		'click_by_text', 'clicktext' { 'click_text' }
+		'type', 'input', 'set', 'setvalue' { 'set_value' }
+		'fill_by_text', 'filltext' { 'fill_text' }
+		'select', 'select_option', 'choose', 'choose_option' { 'select_value' }
+		'enter', 'return', 'pressenter' { 'press_enter' }
+		'scroll_to', 'reveal', 'scrollintoview' { 'scroll_into_view' }
+		else { clean }
+	}
+}
+
+pub fn browser_operation_supported(value string) bool {
+	return normalize_browser_operation(value) in browser_operations
+}
+
+pub fn browser_action_operation(action BrowserAction) string {
+	fallback := if action.name == 'Browser.Submit' { 'submit' } else { 'click' }
+	return normalize_browser_operation(action.args['operation'] or { fallback })
+}
+
+pub fn browser_operation_is_textual(value string) bool {
+	return normalize_browser_operation(value) in ['click_text', 'fill_text']
+}
+
+pub fn browser_operation_is_mutating(value string) bool {
+	return normalize_browser_operation(value) in [
+		'fill',
+		'fill_text',
+		'set_value',
+		'submit',
+		'check',
+		'uncheck',
+		'toggle',
+		'select_value',
+	]
 }
