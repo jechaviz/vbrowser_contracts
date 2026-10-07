@@ -24,5 +24,6 @@ fn test_rank_page_controls_filters_roles_and_helpers() {
 	assert page_control_is_editable(controls[0])
 	assert page_control_is_clickable(controls[1])
 	assert page_control_is_navigable(controls[2])
-	assert page_control_by_id(controls, 'go') or { panic('missing control') }.selector == '#go'
+	found := page_control_by_id(controls, 'go') or { panic('missing control') }
+	assert found.selector == '#go'
 }
