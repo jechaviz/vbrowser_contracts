@@ -32,6 +32,7 @@ pub:
 	label string
 	name string
 	value string
+	selector string
 	href string
 	disabled bool
 	checked bool
@@ -109,6 +110,7 @@ pub fn encode_handoff(handoff BrowserHandoff) string {
 			label: control.label
 			name: control.name
 			value: control.value
+			selector: control.selector
 			href: control.href
 			disabled: control.disabled
 			checked: control.checked
@@ -165,6 +167,7 @@ pub fn decode_handoff(payload string) !BrowserHandoff {
 			label: item.label
 			name: item.name
 			value: item.value
+			selector: item.selector
 			href: item.href
 			disabled: item.disabled
 			checked: item.checked
