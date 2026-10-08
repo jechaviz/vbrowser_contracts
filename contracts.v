@@ -246,7 +246,7 @@ pub fn browser_contract_for_action(name string, args map[string]string) vaction_
 	}
 	if name == 'Browser.Act' && browser_action_has_external_side_effect_signal(args) {
 		mut effects := base.effects.clone()
-		if .network !in effects {
+		if vaction_contracts.Effect.network !in effects {
 			effects << .network
 		}
 		mut evidence := base.evidence.clone()
