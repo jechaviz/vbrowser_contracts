@@ -100,6 +100,8 @@ pub:
 	url string
 	expected_snapshot_revision u64
 	actor string
+	confirmation_granted bool
+	confirmation_source string
 }
 
 struct WireEvidence {
@@ -126,6 +128,8 @@ pub fn encode_handoff(handoff BrowserHandoff) string {
 			url: action.target.url
 			expected_snapshot_revision: action.expected_snapshot_revision
 			actor: action.actor.str()
+			confirmation_granted: action.confirmation_granted
+			confirmation_source: action.confirmation_source
 		}
 	}
 	mut evidence := []WireEvidence{cap: handoff.evidence.len}
@@ -278,6 +282,8 @@ pub fn decode_handoff(payload string) !BrowserHandoff {
 			contract: contract
 			expected_snapshot_revision: item.expected_snapshot_revision
 			actor: parse_actor(item.actor)!
+			confirmation_granted: item.confirmation_granted
+			confirmation_source: item.confirmation_source
 		}
 	}
 	mut evidence := []ActionEvidence{cap: wire.evidence.len}
