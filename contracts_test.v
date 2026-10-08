@@ -61,7 +61,7 @@ fn test_wire_tolerates_future_minor_enum_values() {
 
 
 fn test_browser_operation_vocabulary_is_canonical_and_compatible() {
-	assert contract_version == '1.4.0'
+	assert contract_version == '1.5.0'
 	assert normalize_browser_operation('tap') == 'click'
 	assert normalize_browser_operation('click by text') == 'click_text'
 	assert normalize_browser_operation('select-option') == 'select_value'
@@ -264,4 +264,52 @@ fn test_press_enter_escalates_only_when_context_signals_external_effect() {
 	}, BrowserTarget{}, 0)
 	assert search.contract.risk == .medium
 	assert !search.contract.confirmation_required()
+}
+
+
+fn test_action_confirmation_is_bound_to_action_and_survives_wire() {
+	intent := BrowserIntent{
+		id: 'approval'
+		raw: 'delete repository'
+		kind: .command
+		value: 'delete repository'
+	}
+	action := action_for_intent('delete-approved', intent, 'Browser.Act', {
+		'operation': 'click_text'
+		'text': 'Delete repository'
+	}, BrowserTarget{url: 'https://example.com/admin'}, 6)
+	assert action.confirmation_pending()
+	approved := grant_action_confirmation(action, 'waibav:user')
+	assert !approved.confirmation_pending()
+	assert approved.confirmation_granted
+	assert approved.confirmation_source == 'waibav:user'
+	assert approved.valid()
+
+	payload := encode_handoff(BrowserHandoff{
+		source: 'waibav'
+		destination: 'browser_runtime'
+		intent: intent
+		pending: [approved]
+	})
+	decoded := decode_handoff(payload) or { panic(err.msg()) }
+	assert decoded.pending.len == 1
+	assert decoded.pending[0].confirmation_granted
+	assert decoded.pending[0].confirmation_source == 'waibav:user'
+	assert !decoded.pending[0].confirmation_pending()
+}
+
+fn test_granted_confirmation_requires_a_source_for_valid_manual_actions() {
+	base := BrowserAction{
+		id: 'manual'
+		name: 'Browser.Act'
+		contract: browser_contract_for_action('Browser.Act', {
+			'text': 'Delete repository'
+		})
+		confirmation_granted: true
+	}
+	assert !base.valid()
+	assert grant_action_confirmation(BrowserAction{
+		...base
+		confirmation_granted: false
+	}, 'user').valid()
 }
