@@ -11,7 +11,7 @@ fn success_handoff_for_test() BrowserHandoff {
 				phase: .succeeded
 			},
 			ActionEvidence{
-				action_id: 'hebrowser-state'
+				action_id: 'runtime-state'
 				phase: .succeeded
 			},
 		]
@@ -20,12 +20,12 @@ fn success_handoff_for_test() BrowserHandoff {
 
 fn test_verified_success_requires_terminal_state() {
 	good := success_handoff_for_test()
-	assert good.verified_success()
+	assert good.verified_success('runtime-state')
 	no_state := BrowserHandoff{
 		...good
 		evidence: [ActionEvidence{action_id: 'open', phase: .succeeded}]
 	}
-	assert !no_state.verified_success()
+	assert !no_state.verified_success('runtime-state')
 }
 
 fn test_verified_success_rejects_mixed_action_outcomes() {
@@ -40,7 +40,7 @@ fn test_verified_success_rejects_mixed_action_outcomes() {
 			...good
 			evidence: evidence
 		}
-		assert !mixed.verified_success()
+		assert !mixed.verified_success('runtime-state')
 	}
 }
 
@@ -53,24 +53,24 @@ fn test_verified_success_rejects_pending_and_incompatible_handoffs() {
 				{'url': 'https://example.com'}, BrowserTarget{url: 'https://example.com'}, 0),
 		]
 	}
-	assert !pending.verified_success()
+	assert !pending.verified_success('runtime-state')
 	incompatible := BrowserHandoff{
 		...good
 		version: '999.0.0'
 	}
-	assert !incompatible.verified_success()
+	assert !incompatible.verified_success('runtime-state')
 }
 
 fn test_verified_success_rejects_later_unverified_state() {
 	good := success_handoff_for_test()
 	mut evidence := good.evidence.clone()
 	evidence << ActionEvidence{
-		action_id: 'hebrowser-state'
+		action_id: 'runtime-state'
 		phase: .proposed
 	}
 	late := BrowserHandoff{
 		...good
 		evidence: evidence
 	}
-	assert !late.verified_success()
+	assert !late.verified_success('runtime-state')
 }
