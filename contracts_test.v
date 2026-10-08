@@ -61,7 +61,7 @@ fn test_wire_tolerates_future_minor_enum_values() {
 
 
 fn test_browser_operation_vocabulary_is_canonical_and_compatible() {
-	assert contract_version == '1.3.0'
+	assert contract_version == '1.4.0'
 	assert normalize_browser_operation('tap') == 'click'
 	assert normalize_browser_operation('click by text') == 'click_text'
 	assert normalize_browser_operation('select-option') == 'select_value'
@@ -161,4 +161,58 @@ fn test_handoff_roundtrip_preserves_page_structure() {
 	assert decoded.snapshot.structure.images[0].alt == 'Diagram'
 	assert decoded.snapshot.structure.tables[0].headers == ['Name', 'Meaning']
 	assert decoded.snapshot.structure.tables[0].row_count == 3
+}
+
+
+fn test_browser_action_contract_escalates_submit_and_external_side_effects() {
+	intent := BrowserIntent{
+		id: 'risk'
+		raw: 'act'
+		kind: .command
+		value: 'act'
+	}
+	submit := action_for_intent('submit-1', intent, 'Browser.Act', {
+		'operation': 'submit'
+	}, BrowserTarget{}, 0)
+	assert submit.contract.risk == .high
+	assert submit.contract.confirmation_required()
+
+	star := action_for_intent('star-1', intent, 'Browser.Act', {
+		'operation': 'click'
+		'site_action': 'github.star'
+	}, BrowserTarget{}, 0)
+	assert star.contract.risk == .high
+	assert star.contract.confirmation_required()
+
+	delete := action_for_intent('delete-1', intent, 'Browser.Act', {
+		'operation': 'click_text'
+		'text': 'Delete repository'
+	}, BrowserTarget{}, 0)
+	assert delete.contract.risk == .high
+	assert delete.contract.confirmation_required()
+}
+
+fn test_browser_action_contract_does_not_overconfirm_local_field_edits() {
+	intent := BrowserIntent{
+		id: 'local-edit'
+		raw: 'fill form'
+		kind: .command
+		value: 'fill form'
+	}
+	for operation in ['fill', 'set_value', 'select_value', 'scroll_into_view', 'focus'] {
+		action := action_for_intent('a-' + operation, intent, 'Browser.Act', {
+			'operation': operation
+			'value': 'draft'
+		}, BrowserTarget{}, 0)
+		assert action.contract.risk == .medium
+		assert !action.contract.confirmation_required()
+	}
+}
+
+fn test_browser_action_external_signal_helper_is_narrow() {
+	assert browser_action_has_external_side_effect_signal({'text': 'Send message'})
+	assert browser_action_has_external_side_effect_signal({'site_action': 'github.star'})
+	assert browser_action_has_external_side_effect_signal({'label': 'Save changes'})
+	assert !browser_action_has_external_side_effect_signal({'text': 'Open issues'})
+	assert !browser_action_has_external_side_effect_signal({'text': 'Search docs'})
 }
