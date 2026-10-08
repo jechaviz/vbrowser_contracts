@@ -2,7 +2,7 @@ module vbrowser_contracts
 
 import vaction_contracts
 
-pub const contract_version = '1.3.0'
+pub const contract_version = '1.4.0'
 
 pub enum IntentKind {
 	navigate
@@ -180,11 +180,68 @@ pub fn action_for_intent(id string, intent BrowserIntent, name string, args map[
 		name:                       name
 		args:                       args.clone()
 		target:                     target
-		contract:                   vaction_contracts.contract_for_action(name)
+		contract:                   browser_contract_for_action(name, args)
 		expected_snapshot_revision: revision
 	}
 }
 
+
+pub fn browser_contract_for_action(name string, args map[string]string) vaction_contracts.ActionContract {
+	base := vaction_contracts.contract_for_action(name)
+	operation := normalize_browser_operation(args['operation'] or {
+		if name == 'Browser.Submit' { 'submit' } else { 'click' }
+	})
+	if name == 'Browser.Submit' || operation == 'submit' {
+		submit := vaction_contracts.contract_for_action('Browser.Submit')
+		return vaction_contracts.ActionContract{
+			...submit
+			action: name
+		}
+	}
+	if name == 'Browser.Act' && browser_action_has_external_side_effect_signal(args) {
+		mut effects := base.effects.clone()
+		if .network !in effects {
+			effects << .network
+		}
+		mut evidence := base.evidence.clone()
+		if 'confirmation_receipt' !in evidence {
+			evidence << 'confirmation_receipt'
+		}
+		return vaction_contracts.ActionContract{
+			...base
+			risk: .high
+			effects: effects
+			evidence: evidence
+			requires_confirmation: true
+		}
+	}
+	return base
+}
+
+pub fn browser_action_has_external_side_effect_signal(args map[string]string) bool {
+	mut signal := []string{}
+	for key in ['site_action', 'text', 'label', 'aria_label', 'title', 'description', 'goal'] {
+		value := args[key] or { '' }
+		if value.trim_space() != '' {
+			signal << value.to_lower()
+		}
+	}
+	joined := signal.join(' ')
+	for marker in [
+		'delete', 'remove', 'destroy', 'erase',
+		'send', 'message', 'post', 'publish',
+		'buy', 'purchase', 'checkout', 'pay', 'order',
+		'approve', 'accept', 'merge', 'close issue', 'close pull',
+		'star', 'unstar', 'follow', 'unfollow', 'like', 'unlike',
+		'subscribe', 'unsubscribe', 'invite', 'connect',
+		'upload', 'create', 'save changes',
+	] {
+		if joined.contains(marker) {
+			return true
+		}
+	}
+	return false
+}
 
 pub const browser_operations = [
 	'click',
