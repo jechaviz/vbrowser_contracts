@@ -1,6 +1,6 @@
 module vbrowser_contracts
 
-import json
+import json2
 
 struct WireHandoff {
 pub:
@@ -235,11 +235,11 @@ pub fn encode_handoff(handoff BrowserHandoff) string {
 		pending: actions
 		evidence: evidence
 	}
-	return json.encode(wire)
+	return json2.encode(wire)
 }
 
 pub fn decode_handoff(payload string) !BrowserHandoff {
-	wire := json.decode(WireHandoff, payload)!
+	wire := json2.decode[WireHandoff](payload)!
 	if !version_compatible(wire.version) {
 		return error('unsupported browser handoff major version: ${wire.version}')
 	}

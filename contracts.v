@@ -185,6 +185,23 @@ pub fn (handoff BrowserHandoff) compatible() bool {
 		&& handoff.destination.trim_space() != ''
 }
 
+
+pub fn (handoff BrowserHandoff) verified_success() bool {
+	if !handoff.compatible() || handoff.pending.len > 0 {
+		return false
+	}
+	mut state_verified := false
+	for receipt in handoff.evidence {
+		if receipt.phase != .succeeded {
+			return false
+		}
+		if receipt.action_id == handoff.source + '-state' {
+			state_verified = true
+		}
+	}
+	return state_verified
+}
+
 pub fn action_for_intent(id string, intent BrowserIntent, name string, args map[string]string,
 	target BrowserTarget, revision u64) BrowserAction {
 	return BrowserAction{
@@ -226,7 +243,7 @@ pub fn browser_contract_for_action(name string, args map[string]string) vaction_
 	}
 	if name == 'Browser.Act' && browser_action_has_external_side_effect_signal(args) {
 		mut effects := base.effects.clone()
-		if .network !in effects {
+		if vaction_contracts.Effect.network !in effects {
 			effects << .network
 		}
 		mut evidence := base.evidence.clone()
