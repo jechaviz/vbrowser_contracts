@@ -216,3 +216,29 @@ fn test_browser_action_external_signal_helper_is_narrow() {
 	assert !browser_action_has_external_side_effect_signal({'text': 'Open issues'})
 	assert !browser_action_has_external_side_effect_signal({'text': 'Search docs'})
 }
+
+
+fn test_wire_roundtrip_preserves_argument_aware_confirmation_policy() {
+	intent := BrowserIntent{
+		id: 'wire-risk'
+		raw: 'star repository'
+		kind: .command
+		value: 'star repository'
+	}
+	action := action_for_intent('star-wire', intent, 'Browser.Act', {
+		'operation': 'click'
+		'site_action': 'github.star'
+	}, BrowserTarget{url: 'https://github.com/example/repo'}, 4)
+	assert action.contract.confirmation_required()
+	payload := encode_handoff(BrowserHandoff{
+		source: 'waibav'
+		destination: 'browser_runtime'
+		intent: intent
+		pending: [action]
+	})
+	decoded := decode_handoff(payload) or { panic(err.msg()) }
+	assert decoded.pending.len == 1
+	assert decoded.pending[0].contract.risk == .high
+	assert decoded.pending[0].contract.confirmation_required()
+	assert decoded.pending[0].contract.action == 'Browser.Act'
+}
