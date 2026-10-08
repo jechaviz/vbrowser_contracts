@@ -2,7 +2,7 @@ module vbrowser_contracts
 
 import vaction_contracts
 
-pub const contract_version = '1.5.0'
+pub const contract_version = '1.6.0'
 
 pub enum IntentKind {
 	navigate
@@ -100,6 +100,15 @@ pub:
 	tables        []PageTable
 }
 
+pub struct PageDownload {
+pub:
+	name         string
+	path         string
+	url          string
+	content_type string
+	bytes        int
+}
+
 pub struct PageSnapshot {
 pub:
 	session_id       string
@@ -111,6 +120,7 @@ pub:
 	dom_fingerprint  string
 	captured_at_unix i64
 	controls         []PageControl
+	downloads        []PageDownload
 	structure        PageStructure
 }
 
