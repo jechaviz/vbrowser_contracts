@@ -1,7 +1,6 @@
 module vbrowser_contracts
 
 import json
-import vaction_contracts
 
 struct WireHandoff {
 pub:
