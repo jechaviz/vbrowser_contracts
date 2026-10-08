@@ -30,7 +30,7 @@ fn test_verified_success_requires_terminal_state() {
 
 fn test_verified_success_rejects_mixed_action_outcomes() {
 	good := success_handoff_for_test()
-	for phase in [ActionPhase.failed, .cancelled, .awaiting_confirmation, .running] {
+	for phase in [ActionPhase.proposed, .failed, .cancelled, .awaiting_confirmation, .running] {
 		mut evidence := good.evidence.clone()
 		evidence << ActionEvidence{
 			action_id: 'submit'
