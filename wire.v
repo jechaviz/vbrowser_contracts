@@ -74,6 +74,15 @@ pub:
 	tables []WireTable
 }
 
+struct WireDownload {
+pub:
+	name string
+	path string
+	url string
+	content_type string
+	bytes int
+}
+
 struct WireSnapshot {
 pub:
 	session_id string
@@ -85,6 +94,7 @@ pub:
 	dom_fingerprint string
 	captured_at_unix i64
 	controls []WireControl
+	downloads []WireDownload
 	structure WireStructure
 }
 
@@ -157,6 +167,16 @@ pub fn encode_handoff(handoff BrowserHandoff) string {
 			checked: control.checked
 		}
 	}
+	mut downloads := []WireDownload{cap: handoff.snapshot.downloads.len}
+	for item in handoff.snapshot.downloads {
+		downloads << WireDownload{
+			name: item.name
+			path: item.path
+			url: item.url
+			content_type: item.content_type
+			bytes: item.bytes
+		}
+	}
 	mut headings := []WireHeading{cap: handoff.snapshot.structure.headings.len}
 	for item in handoff.snapshot.structure.headings {
 		headings << WireHeading{level: item.level, text: item.text}
@@ -201,6 +221,7 @@ pub fn encode_handoff(handoff BrowserHandoff) string {
 			dom_fingerprint: handoff.snapshot.dom_fingerprint
 			captured_at_unix: handoff.snapshot.captured_at_unix
 			controls: controls
+			downloads: downloads
 			structure: WireStructure{
 				description: handoff.snapshot.structure.description
 				language: handoff.snapshot.structure.language
@@ -242,6 +263,16 @@ pub fn decode_handoff(payload string) !BrowserHandoff {
 			href: item.href
 			disabled: item.disabled
 			checked: item.checked
+		}
+	}
+	mut downloads := []PageDownload{cap: wire.snapshot.downloads.len}
+	for item in wire.snapshot.downloads {
+		downloads << PageDownload{
+			name: item.name
+			path: item.path
+			url: item.url
+			content_type: item.content_type
+			bytes: item.bytes
 		}
 	}
 	mut headings := []PageHeading{cap: wire.snapshot.structure.headings.len}
@@ -313,6 +344,7 @@ pub fn decode_handoff(payload string) !BrowserHandoff {
 			dom_fingerprint: wire.snapshot.dom_fingerprint
 			captured_at_unix: wire.snapshot.captured_at_unix
 			controls: controls
+			downloads: downloads
 			structure: PageStructure{
 				description: wire.snapshot.structure.description
 				language: wire.snapshot.structure.language
