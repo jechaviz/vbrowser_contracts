@@ -264,7 +264,7 @@ pub fn decode_handoff(payload string) !BrowserHandoff {
 	}
 	mut actions := []BrowserAction{cap: wire.pending.len}
 	for item in wire.pending {
-		contract := vaction_contracts.contract_for_action(item.name)
+		contract := browser_contract_for_action(item.name, item.args)
 		actions << BrowserAction{
 			id: item.id
 			intent_id: item.intent_id
