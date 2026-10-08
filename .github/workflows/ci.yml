@@ -1,0 +1,33 @@
+name: V contract CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: vlang/setup-v@v1.7
+        with:
+          stable: true
+      - name: Install public contract dependency
+        shell: bash
+        run: |
+          set -e
+          mkdir -p "$HOME/.vmodules"
+          if [ "${{ github.event.repository.name }}" = "vbrowser_contracts" ]; then
+            git clone --depth 1 https://github.com/jechaviz/vaction_contracts.git "$HOME/.vmodules/vaction_contracts"
+          fi
+      - name: Run V tests
+        shell: bash
+        run: v test .
