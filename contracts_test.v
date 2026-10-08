@@ -242,3 +242,26 @@ fn test_wire_roundtrip_preserves_argument_aware_confirmation_policy() {
 	assert decoded.pending[0].contract.confirmation_required()
 	assert decoded.pending[0].contract.action == 'Browser.Act'
 }
+
+
+fn test_press_enter_escalates_only_when_context_signals_external_effect() {
+	intent := BrowserIntent{
+		id: 'enter-risk'
+		raw: 'press enter'
+		kind: .command
+		value: 'press enter'
+	}
+	send := action_for_intent('send-enter', intent, 'Browser.Act', {
+		'operation': 'press_enter'
+		'label': 'Send message'
+	}, BrowserTarget{}, 0)
+	assert send.contract.risk == .high
+	assert send.contract.confirmation_required()
+
+	search := action_for_intent('search-enter', intent, 'Browser.Act', {
+		'operation': 'press_enter'
+		'label': 'Search'
+	}, BrowserTarget{}, 0)
+	assert search.contract.risk == .medium
+	assert !search.contract.confirmation_required()
+}
