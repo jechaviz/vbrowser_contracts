@@ -186,8 +186,8 @@ pub fn (handoff BrowserHandoff) compatible() bool {
 }
 
 
-pub fn (handoff BrowserHandoff) verified_success() bool {
-	if !handoff.compatible() || handoff.pending.len > 0 {
+pub fn (handoff BrowserHandoff) verified_success(state_receipt_id string) bool {
+	if !handoff.compatible() || handoff.pending.len > 0 || state_receipt_id.trim_space() == '' {
 		return false
 	}
 	mut state_verified := false
@@ -195,7 +195,7 @@ pub fn (handoff BrowserHandoff) verified_success() bool {
 		if receipt.phase in [.failed, .cancelled, .awaiting_confirmation, .running] {
 			return false
 		}
-		if receipt.action_id == 'hebrowser-state' {
+		if receipt.action_id == state_receipt_id {
 			if receipt.phase != .succeeded {
 				return false
 			}
