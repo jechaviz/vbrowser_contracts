@@ -185,6 +185,26 @@ pub fn (handoff BrowserHandoff) compatible() bool {
 		&& handoff.destination.trim_space() != ''
 }
 
+
+pub fn (handoff BrowserHandoff) verified_success() bool {
+	if !handoff.compatible() || handoff.pending.len > 0 {
+		return false
+	}
+	mut state_verified := false
+	for receipt in handoff.evidence {
+		if receipt.phase in [.failed, .cancelled, .awaiting_confirmation, .running] {
+			return false
+		}
+		if receipt.action_id == 'hebrowser-state' {
+			if receipt.phase != .succeeded {
+				return false
+			}
+			state_verified = true
+		}
+	}
+	return state_verified
+}
+
 pub fn action_for_intent(id string, intent BrowserIntent, name string, args map[string]string,
 	target BrowserTarget, revision u64) BrowserAction {
 	return BrowserAction{
