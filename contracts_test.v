@@ -61,7 +61,7 @@ fn test_wire_tolerates_future_minor_enum_values() {
 
 
 fn test_browser_operation_vocabulary_is_canonical_and_compatible() {
-	assert contract_version == '1.2.0'
+	assert contract_version == '1.3.0'
 	assert normalize_browser_operation('tap') == 'click'
 	assert normalize_browser_operation('click by text') == 'click_text'
 	assert normalize_browser_operation('select-option') == 'select_value'
@@ -114,4 +114,51 @@ fn test_handoff_roundtrip_preserves_action_surface_controls() {
 	assert decoded.snapshot.controls[0].id == 'el-1'
 	assert decoded.snapshot.controls[0].role == 'button'
 	assert decoded.snapshot.controls[0].label == 'Save'
+}
+
+
+fn test_handoff_roundtrip_preserves_page_structure() {
+	handoff := BrowserHandoff{
+		source: 'hebrowser'
+		destination: 'vimport'
+		snapshot: PageSnapshot{
+			revision: 21
+			url: 'https://example.com/docs'
+			title: 'Docs'
+			structure: PageStructure{
+				description: 'Reference docs'
+				language: 'en'
+				canonical_url: 'https://example.com/docs'
+				headings: [
+					PageHeading{level: 1, text: 'Overview'},
+					PageHeading{level: 2, text: 'API'},
+				]
+				links: [
+					PageLink{text: 'Guide', href: 'https://example.com/guide'},
+				]
+				images: [
+					PageImage{alt: 'Diagram', src: 'https://example.com/diagram.png'},
+				]
+				tables: [
+					PageTable{
+						caption: 'Methods'
+						headers: ['Name', 'Meaning']
+						row_count: 3
+						column_count: 2
+					},
+				]
+			}
+		}
+	}
+	payload := encode_handoff(handoff)
+	decoded := decode_handoff(payload) or { panic(err.msg()) }
+	assert decoded.snapshot.structure.description == 'Reference docs'
+	assert decoded.snapshot.structure.language == 'en'
+	assert decoded.snapshot.structure.canonical_url == 'https://example.com/docs'
+	assert decoded.snapshot.structure.headings.len == 2
+	assert decoded.snapshot.structure.headings[1].text == 'API'
+	assert decoded.snapshot.structure.links[0].href == 'https://example.com/guide'
+	assert decoded.snapshot.structure.images[0].alt == 'Diagram'
+	assert decoded.snapshot.structure.tables[0].headers == ['Name', 'Meaning']
+	assert decoded.snapshot.structure.tables[0].row_count == 3
 }
