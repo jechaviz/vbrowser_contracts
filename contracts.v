@@ -192,13 +192,10 @@ pub fn (handoff BrowserHandoff) verified_success() bool {
 	}
 	mut state_verified := false
 	for receipt in handoff.evidence {
-		if receipt.phase in [.proposed, .failed, .cancelled, .awaiting_confirmation, .running] {
+		if receipt.phase != .succeeded {
 			return false
 		}
 		if receipt.action_id == handoff.source + '-state' {
-			if receipt.phase != .succeeded {
-				return false
-			}
 			state_verified = true
 		}
 	}
