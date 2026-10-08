@@ -61,7 +61,7 @@ fn test_wire_tolerates_future_minor_enum_values() {
 
 
 fn test_browser_operation_vocabulary_is_canonical_and_compatible() {
-	assert contract_version == '1.5.0'
+	assert contract_version == '1.6.0'
 	assert normalize_browser_operation('tap') == 'click'
 	assert normalize_browser_operation('click by text') == 'click_text'
 	assert normalize_browser_operation('select-option') == 'select_value'
@@ -312,4 +312,33 @@ fn test_granted_confirmation_requires_a_source_for_valid_manual_actions() {
 		...base
 		confirmation_granted: false
 	}, 'user').valid()
+}
+
+
+fn test_handoff_roundtrip_preserves_download_artifacts() {
+	handoff := BrowserHandoff{
+		source: 'hebrowser'
+		destination: 'vimport'
+		snapshot: PageSnapshot{
+			revision: 31
+			url: 'https://example.com/report.pdf'
+			title: 'report.pdf'
+			downloads: [
+				PageDownload{
+					name: 'report.pdf'
+					path: 'C:\\Temp\\hebrowser-downloads\\123\\report.pdf'
+					url: 'https://example.com/report.pdf'
+					content_type: 'application/pdf'
+					bytes: 4242
+				},
+			]
+		}
+	}
+	payload := encode_handoff(handoff)
+	decoded := decode_handoff(payload) or { panic(err.msg()) }
+	assert decoded.snapshot.downloads.len == 1
+	assert decoded.snapshot.downloads[0].name == 'report.pdf'
+	assert decoded.snapshot.downloads[0].content_type == 'application/pdf'
+	assert decoded.snapshot.downloads[0].bytes == 4242
+	assert decoded.snapshot.downloads[0].path.contains('report.pdf')
 }
