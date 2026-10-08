@@ -2,7 +2,7 @@ module vbrowser_contracts
 
 import vaction_contracts
 
-pub const contract_version = '1.4.0'
+pub const contract_version = '1.5.0'
 
 pub enum IntentKind {
 	navigate
@@ -124,6 +124,8 @@ pub:
 	contract                   vaction_contracts.ActionContract
 	expected_snapshot_revision u64
 	actor                      Actor = .agent
+	confirmation_granted       bool
+	confirmation_source        string
 }
 
 pub struct ActionEvidence {
@@ -155,6 +157,7 @@ pub fn (intent BrowserIntent) valid() bool {
 pub fn (action BrowserAction) valid() bool {
 	return action.id.trim_space() != '' && action.name.trim_space() != ''
 		&& action.contract.valid()
+		&& (!action.confirmation_granted || action.confirmation_source.trim_space() != '')
 }
 
 pub fn version_compatible(version string) bool {
@@ -185,6 +188,19 @@ pub fn action_for_intent(id string, intent BrowserIntent, name string, args map[
 	}
 }
 
+
+pub fn (action BrowserAction) confirmation_pending() bool {
+	return action.contract.confirmation_required() && !action.confirmation_granted
+}
+
+pub fn grant_action_confirmation(action BrowserAction, source string) BrowserAction {
+	clean_source := if source.trim_space() != '' { source.trim_space() } else { 'unspecified' }
+	return BrowserAction{
+		...action
+		confirmation_granted: true
+		confirmation_source: clean_source
+	}
+}
 
 pub fn browser_contract_for_action(name string, args map[string]string) vaction_contracts.ActionContract {
 	base := vaction_contracts.contract_for_action(name)
