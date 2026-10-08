@@ -106,7 +106,7 @@ pub:
 	path         string
 	url          string
 	content_type string
-	bytes        int
+	bytes        i64
 }
 
 pub struct PageSnapshot {
