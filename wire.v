@@ -38,6 +38,43 @@ pub:
 	checked bool
 }
 
+struct WireHeading {
+pub:
+	level int
+	text string
+}
+
+struct WireLink {
+pub:
+	text string
+	href string
+}
+
+struct WireImage {
+pub:
+	alt string
+	src string
+}
+
+struct WireTable {
+pub:
+	caption string
+	headers []string
+	row_count int
+	column_count int
+}
+
+struct WireStructure {
+pub:
+	description string
+	language string
+	canonical_url string
+	headings []WireHeading
+	links []WireLink
+	images []WireImage
+	tables []WireTable
+}
+
 struct WireSnapshot {
 pub:
 	session_id string
@@ -49,6 +86,7 @@ pub:
 	dom_fingerprint string
 	captured_at_unix i64
 	controls []WireControl
+	structure WireStructure
 }
 
 struct WireAction {
@@ -116,6 +154,27 @@ pub fn encode_handoff(handoff BrowserHandoff) string {
 			checked: control.checked
 		}
 	}
+	mut headings := []WireHeading{cap: handoff.snapshot.structure.headings.len}
+	for item in handoff.snapshot.structure.headings {
+		headings << WireHeading{level: item.level, text: item.text}
+	}
+	mut links := []WireLink{cap: handoff.snapshot.structure.links.len}
+	for item in handoff.snapshot.structure.links {
+		links << WireLink{text: item.text, href: item.href}
+	}
+	mut images := []WireImage{cap: handoff.snapshot.structure.images.len}
+	for item in handoff.snapshot.structure.images {
+		images << WireImage{alt: item.alt, src: item.src}
+	}
+	mut tables := []WireTable{cap: handoff.snapshot.structure.tables.len}
+	for item in handoff.snapshot.structure.tables {
+		tables << WireTable{
+			caption: item.caption
+			headers: item.headers.clone()
+			row_count: item.row_count
+			column_count: item.column_count
+		}
+	}
 	wire := WireHandoff{
 		version: handoff.version
 		source: handoff.source
@@ -139,6 +198,15 @@ pub fn encode_handoff(handoff BrowserHandoff) string {
 			dom_fingerprint: handoff.snapshot.dom_fingerprint
 			captured_at_unix: handoff.snapshot.captured_at_unix
 			controls: controls
+			structure: WireStructure{
+				description: handoff.snapshot.structure.description
+				language: handoff.snapshot.structure.language
+				canonical_url: handoff.snapshot.structure.canonical_url
+				headings: headings
+				links: links
+				images: images
+				tables: tables
+			}
 		}
 		pending: actions
 		evidence: evidence
@@ -171,6 +239,27 @@ pub fn decode_handoff(payload string) !BrowserHandoff {
 			href: item.href
 			disabled: item.disabled
 			checked: item.checked
+		}
+	}
+	mut headings := []PageHeading{cap: wire.snapshot.structure.headings.len}
+	for item in wire.snapshot.structure.headings {
+		headings << PageHeading{level: item.level, text: item.text}
+	}
+	mut links := []PageLink{cap: wire.snapshot.structure.links.len}
+	for item in wire.snapshot.structure.links {
+		links << PageLink{text: item.text, href: item.href}
+	}
+	mut images := []PageImage{cap: wire.snapshot.structure.images.len}
+	for item in wire.snapshot.structure.images {
+		images << PageImage{alt: item.alt, src: item.src}
+	}
+	mut tables := []PageTable{cap: wire.snapshot.structure.tables.len}
+	for item in wire.snapshot.structure.tables {
+		tables << PageTable{
+			caption: item.caption
+			headers: item.headers.clone()
+			row_count: item.row_count
+			column_count: item.column_count
 		}
 	}
 	mut actions := []BrowserAction{cap: wire.pending.len}
@@ -219,6 +308,15 @@ pub fn decode_handoff(payload string) !BrowserHandoff {
 			dom_fingerprint: wire.snapshot.dom_fingerprint
 			captured_at_unix: wire.snapshot.captured_at_unix
 			controls: controls
+			structure: PageStructure{
+				description: wire.snapshot.structure.description
+				language: wire.snapshot.structure.language
+				canonical_url: wire.snapshot.structure.canonical_url
+				headings: headings
+				links: links
+				images: images
+				tables: tables
+			}
 		}
 		pending: actions
 		evidence: evidence
